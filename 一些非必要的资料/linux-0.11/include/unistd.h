@@ -55,6 +55,7 @@
 #include <sys/utsname.h>
 #include <utime.h>
 
+#define __LIBRARY__
 #ifdef __LIBRARY__
 
 #define __NR_setup	0	/* used only by init, to get system going */

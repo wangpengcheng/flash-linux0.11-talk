@@ -37,12 +37,12 @@ static int month[12] = {
 	DAY*(31+29+31+30+31+30+31+31+30+31),
 	DAY*(31+29+31+30+31+30+31+31+30+31+30)
 };
-
-long kernel_mktime(struct tm * tm)
+// 计算从1970 年1月1日到开机当日经过的秒数
+long kernel_mktime(struct tm* tm)
 {
 	long res;
 	int year;
-
+	// 计算年时间
 	year = tm->tm_year - 70;
 /* magic offsets (y+1) needed to get leapyears right.*/
 	res = YEAR*year + DAY*((year+1)/4);

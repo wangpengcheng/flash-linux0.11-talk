@@ -1,3 +1,7 @@
+
+/**
+ * @brief 切换到用户模式
+ */
 #define move_to_user_mode() \
 __asm__ ("movl %%esp,%%eax\n\t" \
 	"pushl $0x17\n\t" \
@@ -24,7 +28,7 @@ __asm__ ("movw %%dx,%%ax\n\t" \
 	"movw %0,%%dx\n\t" \
 	"movl %%eax,%1\n\t" \
 	"movl %%edx,%2" \
-	: \
+	: \ 
 	: "i" ((short) (0x8000+(dpl<<13)+(type<<8))), \
 	"o" (*((char *) (gate_addr))), \
 	"o" (*(4+(char *) (gate_addr))), \

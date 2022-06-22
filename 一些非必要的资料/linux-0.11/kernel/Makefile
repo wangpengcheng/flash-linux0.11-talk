@@ -5,29 +5,36 @@
 # removes any old dependencies. DON'T put your own dependencies here
 # unless it's something special (ie not a .c file).
 #
+# 
 
-AR	=gar
-AS	=gas
-LD	=gld
-LDFLAGS	=-s -x
-CC	=gcc
+AR	=gar # gnu 二进制文件处理程序，用于创建、修改以及从归档文件中抽取文件
+AS	=gas # GNU 的汇编程序
+LD	=gld # GNU 的连接程序
+LDFLAGS	=-s -x # 连接程序所有的参数，-s 输出文件中省略的所有符号信息，-x 删除所有局部符号
+CC	=gcc # 设置编译器
 CFLAGS	=-Wall -O -fstrength-reduce -fomit-frame-pointer -fcombine-regs \
 	-finline-functions -mstring-insns -nostdinc -I../include
-CPP	=gcc -E -nostdinc -I../include
-
+CPP	=gcc -E -nostdinc -I../include # 
+# 将所有输入转换为.s 汇编
 .c.s:
 	$(CC) $(CFLAGS) \
-	-S -o $*.s $<
+	-S -o $*.s $<   
+# 将所有汇编转换为.o 文件
 .s.o:
 	$(AS) -c -o $*.o $<
+# 将c文件直接转为.o 不进行连接
 .c.o:
 	$(CC) $(CFLAGS) \
 	-c -o $*.o $<
 
+
+# 设置目标对象object 
 OBJS  = sched.o system_call.o traps.o asm.o fork.o \
 	panic.o printk.o vsprintf.o sys.o exit.o \
 	signal.o mktime.o
 
+
+# 设置合成方式
 kernel.o: $(OBJS)
 	$(LD) -r -o kernel.o $(OBJS)
 	sync
@@ -39,6 +46,7 @@ clean:
 	(cd blk_drv; make clean)
 	(cd math; make clean)
 
+# 执行脚本检测依赖关系
 dep:
 	sed '/\#\#\# Dependencies/q' < Makefile > tmp_make
 	(for i in *.c;do echo -n `echo $$i | sed 's,\.c,\.s,'`" "; \
