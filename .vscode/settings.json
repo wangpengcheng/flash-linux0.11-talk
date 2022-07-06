@@ -1,0 +1,18 @@
+{
+    "makefile.extensionOutputFolder": "./.vscode",
+    "files.associations": {
+        "*.md": "markdown",
+        "*.cu": "cpp",
+        ".env.development": "ini",
+        ".env.production": "ini",
+        "*.conf": "ini",
+        "system.h": "c",
+        "io.h": "c",
+        "tty.h": "c",
+        "sched.h": "c",
+        "head.h": "c",
+        "unistd.h": "c",
+        "types.h": "c",
+        "signal.h": "c"
+    }
+}

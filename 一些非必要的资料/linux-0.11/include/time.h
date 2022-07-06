@@ -14,10 +14,10 @@ typedef unsigned int size_t;
 #define CLOCKS_PER_SEC 100
 
 typedef long clock_t;
-
+// 时间结构体
 struct tm {
-	int tm_sec;
-	int tm_min;
+	int tm_sec; 
+	int tm_min; 
 	int tm_hour;
 	int tm_mday;
 	int tm_mon;

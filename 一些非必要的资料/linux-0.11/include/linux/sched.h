@@ -15,17 +15,38 @@
 #if (NR_OPEN > 32)
 #error "Currently the close-on-exec-flags are in one word, max 32 files/proc"
 #endif
-
+/**
+ * @brief  任务状态 运行中
+ */
 #define TASK_RUNNING		0
+/**
+ * @brief 任务状态可中断
+ * 进程正在睡眠状态(也就是说它被阻塞)，等待某些条件的达成。就可以从状态回到运行态
+ */
 #define TASK_INTERRUPTIBLE	1
+/**
+ * @brief 任务状态不可中断
+ */
 #define TASK_UNINTERRUPTIBLE	2
+/**
+ * @brief 任务状态僵尸
+ */
 #define TASK_ZOMBIE		3
+/**
+ * @brief 任务状态已经停止
+ */
 #define TASK_STOPPED		4
 
 #ifndef NULL
 #define NULL ((void *) 0)
 #endif
-
+/**
+ * @brief  拷贝页表
+ * @param  from             My Param doc
+ * @param  to               My Param doc
+ * @param  size             My Param doc
+ * @return int 
+ */
 extern int copy_page_tables(unsigned long from, unsigned long to, long size);
 extern int free_page_tables(unsigned long from, unsigned long size);
 
@@ -74,20 +95,22 @@ struct tss_struct {
 	long	trace_bitmap;	/* bits: trace 0, bitmap 16-31 */
 	struct i387_struct i387;
 };
-
+/**
+ * @brief 任务结构体
+ */
 struct task_struct {
 /* these are hardcoded - don't touch */
 	long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
-	long counter;
-	long priority;
-	long signal;
-	struct sigaction sigaction[32];
+	long counter; ///< 计数器
+	long priority; // 优先级
+	long signal; // 任务信号量--主要用于信号通信
+	struct sigaction sigaction[32]; // 信号处理句柄数组
 	long blocked;	/* bitmap of masked signals */
 /* various fields */
-	int exit_code;
-	unsigned long start_code,end_code,end_data,brk,start_stack;
-	long pid,father,pgrp,session,leader;
-	unsigned short uid,euid,suid;
+	int exit_code; ///< 退出状态码 0,1,-1
+	unsigned long start_code,end_code,end_data,brk,start_stack; // 运行过程中的中间变量地址
+	long pid,father,pgrp,session,leader; //
+	unsigned short uid,euid,suid; // 
 	unsigned short gid,egid,sgid;
 	long alarm;
 	long utime,stime,cutime,cstime,start_time;
@@ -99,7 +122,7 @@ struct task_struct {
 	struct m_inode * root;
 	struct m_inode * executable;
 	unsigned long close_on_exec;
-	struct file * filp[NR_OPEN];
+	struct file * filp[NR_OPEN]; // 文件块大小
 /* ldt for this task 0 - zero 1 - cs 2 - ds&ss */
 	struct desc_struct ldt[3];
 /* tss for this task */

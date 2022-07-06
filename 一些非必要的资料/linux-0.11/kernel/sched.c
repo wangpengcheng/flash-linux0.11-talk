@@ -10,7 +10,8 @@
  * call functions (type getpid(), which just extracts a field from
  * current-task
  */
-#include <linux/sched.h>
+
+#include <linux/sched.h> 
 #include <linux/kernel.h>
 #include <linux/sys.h>
 #include <linux/fdreg.h>
@@ -20,9 +21,24 @@
 
 #include <signal.h>
 
+/**
+ * @brief 获取NR在信号位图中对应位的二进制数值。信号编号 1-32
+ * 比如信号5的位图数值 = 1 <<(5-1) = 16 = 00010000b
+ */
 #define _S(nr) (1<<((nr)-1))
+
+/**
+ * @brief 检查信号是否可以阻塞
+ * 除了 SIGKILL 和 SIGSTOP 信号以外都是可以阻塞的
+ *
+ */
 #define _BLOCKABLE (~(_S(SIGKILL) | _S(SIGSTOP)))
 
+/**
+ * @brief  显示任务号NR的进程号、进程状态和内核堆栈空闲最大字节数
+ * @param  nr               任务号NR
+ * @param  p                任务状态结构描述符
+ */
 void show_task(int nr,struct task_struct * p)
 {
 	int i,j = 4096-sizeof(struct task_struct);

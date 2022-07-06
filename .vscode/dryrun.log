@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/jinfang/Github/cpp/flash-linux0.11-talk'
+make: Leaving directory '/home/jinfang/Github/cpp/flash-linux0.11-talk'
+ 
+make: *** No targets specified and no makefile found.  Stop.
+
