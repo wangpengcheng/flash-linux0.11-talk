@@ -1,7 +1,14 @@
+
+// 段操作头文件，用于进行段寄存器的嵌入式汇编
+/**
+ * @brief Get the fs byte object
+ * @param  addr             指定地址
+ * @return unsigned char 
+ */
 extern inline unsigned char get_fs_byte(const char * addr)
 {
 	unsigned register char _v;
-
+	// 拷贝用户态寄存器
 	__asm__ ("movb %%fs:%1,%0":"=r" (_v):"m" (*addr));
 	return _v;
 }

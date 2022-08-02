@@ -34,7 +34,10 @@
  * https://www.cnblogs.com/feng9exe/p/12521350.html
  */
 
-static inline _syscall0(int, fork) static inline _syscall0(int, pause) static inline _syscall1(int, setup, void *, BIOS) static inline _syscall0(int, sync)
+static inline _syscall0(int, fork) 
+static inline _syscall0(int, pause) 
+static inline _syscall1(int, setup, void *, BIOS) 
+static inline _syscall0(int, sync)
 
 /**
  *
@@ -174,7 +177,7 @@ void main(void) /* This really IS void, no error here. */
 	floppy_init();							 // 软驱初始化。     （kernel/blk_drv/floppy.c，457）
 	sti();									 // 所有初始化工作都做完了，开启中断
 	move_to_user_mode();					 // 移到用户模式下执行。（include/asm/system.h，第 1 行）
-	// 只想fork
+	// 执行fork
 	if (!fork())
 	{			/* we count on this going ok */
 		init(); // 主线程执行初始化，在新建立的子进程(任务1)中执行
@@ -196,6 +199,7 @@ void main(void) /* This really IS void, no error here. */
 	 */
 	// pause() 系统调用（kernel / sched.c, 144）会把任务 0 转换成可中断等待状态，再执行调度函数。
 	// 但是调度函数只要发现系统中没有其它任务可以运行时就会切换到任务 0，而不依赖于任务 0 的状态。
+	// 主进程空闲时执行pause， 主动发起调度查询空闲的线程并执行
 	for (;;)
 		pause();
 }
@@ -260,6 +264,7 @@ void init(void)
 		while (pid != wait(&i)) // 等待对应pid结束
 			/* nothing */;
 	// 子进程执行结束，循环执行
+	// 主线程循环执行
 	while (1)
 	{
 		// 再次fork
@@ -273,7 +278,7 @@ void init(void)
 			close(0);							// 关闭标准输入
 			close(1);							// 关闭标准输出
 			close(2);							// 关闭错误输出
-			setsid();							// 创建新的会话层--
+			setsid();							// 创建新的会话层
 			(void)open("/dev/tty0", O_RDWR, 0); // 读写方式打来tty0
 			(void)dup(0);						//
 			(void)dup(0);

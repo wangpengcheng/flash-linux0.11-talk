@@ -13,8 +13,16 @@
 #include <string.h>
 
 /* we use this so that we can do without the ctype library */
+/**
+ * @brief 检查是否为数字
+ */
 #define is_digit(c)	((c) >= '0' && (c) <= '9')
 
+/**
+ * @brief 将数字字符串转换为整数
+ * @param  s                原始字符串
+ * @return int 
+ */
 static int skip_atoi(const char **s)
 {
 	int i=0;
@@ -32,11 +40,26 @@ static int skip_atoi(const char **s)
 #define SPECIAL	32		/* 0x */
 #define SMALL	64		/* use 'abcdef' instead of 'ABCDEF' */
 
+/**
+ * @brief 进行除法运算
+ * n 为商
+ * res为返回值余数
+ */
 #define do_div(n,base) ({ \
 int __res; \
 __asm__("divl %4":"=a" (n),"=d" (__res):"0" (n),"1" (0),"r" (base)); \
 __res; })
 
+/**
+ * @brief  将整数转换为指定进制的字符串
+ * @param  str              原始字符串
+ * @param  num              数字
+ * @param  base             基础进制
+ * @param  size             字符串长度
+ * @param  precision        精度
+ * @param  type             类型选项
+ * @return char*  			最终结果字符串
+ */
 static char * number(char * str, int num, int base, int size, int precision
 	,int type)
 {
@@ -88,7 +111,13 @@ static char * number(char * str, int num, int base, int size, int precision
 		*str++ = ' ';
 	return str;
 }
-
+/**
+ * @brief  指定格式进行输出
+ * @param  buf              输出buf
+ * @param  fmt              格式字符串
+ * @param  args             输入参数
+ * @return int 				执行结果
+ */
 int vsprintf(char *buf, const char *fmt, va_list args)
 {
 	int len;
@@ -128,6 +157,7 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 			field_width = skip_atoi(&fmt);
 		else if (*fmt == '*') {
 			/* it's the next argument */
+			// 这里有个bug，应该插入 ++fmt
 			field_width = va_arg(args, int);
 			if (field_width < 0) {
 				field_width = -field_width;

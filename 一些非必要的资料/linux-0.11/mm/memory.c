@@ -257,14 +257,19 @@ void do_wp_page(unsigned long error_code,unsigned long address)
 		*((unsigned long *) ((address>>20) &0xffc)))));
 
 }
-
+/**
+ * @brief 确认目标地址可写
+ * @param  address          目标逻辑地址
+ */
 void write_verify(unsigned long address)
 {
 	unsigned long page;
-
+	// 检测页是否越界
 	if (!( (page = *((unsigned long *) ((address>>20) & 0xffc)) )&1))
 		return;
+	// 计算页地址
 	page &= 0xfffff000;
+	// 计算页内偏移
 	page += ((address>>10) & 0xffc);
 	if ((3 & *(unsigned long *) page) == 1)  /* non-writeable, present */
 		un_wp_page((unsigned long *) page);

@@ -13,12 +13,18 @@
 
 #define TTY_BUF_SIZE 1024
 
-struct tty_queue {
-	unsigned long data;
-	unsigned long head;
-	unsigned long tail;
-	struct task_struct * proc_list;
-	char buf[TTY_BUF_SIZE];
+/**
+ * @brief 终端处理数据保存结构
+ * 被保存在3个tty_queue结构的字符串
+ * 缓冲队列中
+ */
+struct tty_queue
+{
+	unsigned long data;			   //< 等待队列缓冲区中当前数据统计值，对于串口终端，存放串口端口地址。
+	unsigned long head;			   //< 缓冲区中数据头指针
+	unsigned long tail;			   //< 缓冲区中数据尾部指针
+	struct task_struct *proc_list; //< 等待本缓冲队列的进程列表
+	char buf[TTY_BUF_SIZE];		   //< 队列缓冲区，长度为1页
 };
 
 #define INC(a) ((a) = ((a)+1) & (TTY_BUF_SIZE-1))
@@ -41,17 +47,23 @@ struct tty_queue {
 #define START_CHAR(tty) ((tty)->termios.c_cc[VSTART])
 #define STOP_CHAR(tty) ((tty)->termios.c_cc[VSTOP])
 #define SUSPEND_CHAR(tty) ((tty)->termios.c_cc[VSUSP])
-
-struct tty_struct {
-	struct termios termios;
-	int pgrp;
-	int stopped;
-	void (*write)(struct tty_struct * tty);
-	struct tty_queue read_q;
-	struct tty_queue write_q;
-	struct tty_queue secondary;
-	};
-
+/**
+ * @brief 终端设备描述数据结构体
+ */
+struct tty_struct
+{
+	struct termios termios;				   //< 终端IO 属性和控制字符数据结构，相关IO属性
+	int pgrp;							   //< 所属进程组，指明前台进程组。即当前拥有该终端设备的进程组
+	int stopped;						   //< 终端停止标志，表明终端是否停用
+	void (*write)(struct tty_struct *tty); //< 写操作函数，控制台终端，它负责驱动显示硬件，在屏幕上显示字符串等信息
+	struct tty_queue read_q;			   //< 读数据队列
+	struct tty_queue write_q;			   //< 写数据队列
+	struct tty_queue secondary;			   //< tty 辅助队列(存放规范模式字符序列)，
+};
+/**
+ * @brief 终端结构数组
+ * 保存每个串口设备终端信息
+ */
 extern struct tty_struct tty_table[];
 
 /*	intr=^C		quit=^|		erase=del	kill=^U

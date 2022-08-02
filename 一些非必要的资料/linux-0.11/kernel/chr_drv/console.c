@@ -14,6 +14,14 @@
  *
  * Beeping thanks to John T Kohl.
  */
+/*
+ * 该模块实现控制台输入输出功能
+ *     'void con_init(void)'
+ *     'void con_write(struct tty_queue * queue)'
+ * 希望这是一个非常完整的VT102 实现。
+ *
+ * 感谢 John T Kohl 实现了蜂鸣指示。
+ */
 
 /*
  *  NOTE!!! We sometimes disable and enable interrupts for a short while
@@ -36,7 +44,7 @@
  * These are set up by the setup-routine at boot-time:
  */
 
-#define ORIG_X			(*(unsigned char *)0x90000)
+#define ORIG_X			(*(unsigned char *)0x90000)  // 光标列号
 #define ORIG_Y			(*(unsigned char *)0x90001)
 #define ORIG_VIDEO_PAGE		(*(unsigned short *)0x90004)
 #define ORIG_VIDEO_MODE		((*(unsigned short *)0x90006) & 0xff)
@@ -45,14 +53,14 @@
 #define ORIG_VIDEO_EGA_AX	(*(unsigned short *)0x90008)
 #define ORIG_VIDEO_EGA_BX	(*(unsigned short *)0x9000a)
 #define ORIG_VIDEO_EGA_CX	(*(unsigned short *)0x9000c)
-
+// 定义显示器单色 / 彩色显示模式类型符号常数。
 #define VIDEO_TYPE_MDA		0x10	/* Monochrome Text Display	*/
 #define VIDEO_TYPE_CGA		0x11	/* CGA Display 			*/
 #define VIDEO_TYPE_EGAM		0x20	/* EGA/VGA in Monochrome Mode	*/
 #define VIDEO_TYPE_EGAC		0x21	/* EGA/VGA in Color Mode	*/
 
 #define NPAR 16
-
+// 键盘中断处理函数，见keyboard.S
 extern void keyboard_interrupt(void);
 
 static unsigned char	video_type;		/* Type of display being used	*/
@@ -65,23 +73,25 @@ static unsigned long	video_mem_end;		/* End of video RAM (sort of)	*/
 static unsigned short	video_port_reg;		/* Video register select port	*/
 static unsigned short	video_port_val;		/* Video register value port	*/
 static unsigned short	video_erase_char;	/* Char+Attrib to erase with	*/
-
+// 以下变量用于屏幕卷屏操作
 static unsigned long	origin;		/* Used for EGA/VGA fast scroll	*/
 static unsigned long	scr_end;	/* Used for EGA/VGA fast scroll	*/
-static unsigned long	pos;
-static unsigned long	x,y;
-static unsigned long	top,bottom;
+static unsigned long	pos;  // 综合位置
+static unsigned long	x,y;  // 当前光标位置
+static unsigned long	top,bottom;  // 滚动时顶行行号
 static unsigned long	state=0;
 static unsigned long	npar,par[NPAR];
 static unsigned long	ques=0;
 static unsigned char	attr=0x07;
-
+// 统蜂鸣函数。
 static void sysbeep(void);
 
 /*
  * this is what the terminal answers to a ESC-Z or csi0c
  * query (= vt100 response).
+ *  下面是终端回应 ESC-Z 或 csi0c 请求的应答(=vt100 响应)。
  */
+//  csi - 控制序列引导码(Control Sequence Introducer)。
 #define RESPONSE "\033[?1;2c"
 
 /* NOTE! gotoxy thinks x==video_num_columns is ok */
@@ -93,7 +103,7 @@ static inline void gotoxy(unsigned int new_x,unsigned int new_y)
 	y=new_y;
 	pos=origin + y*video_size_row + (x<<1);
 }
-
+// 设置滚屏起始显示内存地址。
 static inline void set_origin(void)
 {
 	cli();
@@ -103,7 +113,8 @@ static inline void set_origin(void)
 	outb_p(0xff&((origin-video_mem_start)>>1), video_port_val);
 	sti();
 }
-
+/// 向上卷动一行（屏幕窗口向下移动）。     
+// 将屏幕窗口向下移动一行。参见程序列表后说明。
 static void scrup(void)
 {
 	if (video_type == VIDEO_TYPE_EGAC || video_type == VIDEO_TYPE_EGAM)
@@ -166,7 +177,10 @@ static void scrup(void)
 			:"cx","di","si");
 	}
 }
-
+//// 向下卷动一行（屏幕窗口向上移动）。     
+// 将屏幕窗口向上移动一行，屏幕显示的内容向下移动 1 行，在被移动开始行的上方出现一新行。参见     
+// 程序列表后说明。处理方法与 scrup()相似，只是为了在移动显示内存数据时不出现数据覆盖错误情况，
+// 复制是以反方向进行的，也即从屏幕倒数第 2 行的最后一个字符开始复制
 static void scrdown(void)
 {
 	if (video_type == VIDEO_TYPE_EGAC || video_type == VIDEO_TYPE_EGAM)
@@ -200,7 +214,7 @@ static void scrdown(void)
 			:"ax","cx","di","si");
 	}
 }
-
+// 光标下移一行
 static void lf(void)
 {
 	if (y+1<bottom) {
@@ -210,7 +224,7 @@ static void lf(void)
 	}
 	scrup();
 }
-
+//  光标上移一行(ri - reverse line feed 反向换行)。
 static void ri(void)
 {
 	if (y>top) {
@@ -220,13 +234,13 @@ static void ri(void)
 	}
 	scrdown();
 }
-
+// 光标回到第 1 列(0 列)左端(cr - carriage return 回车)。
 static void cr(void)
 {
 	pos -= x<<1;
 	x=0;
 }
-
+// 擦除光标前一字符(用空格替代)(del - delete 删除)。 
 static void del(void)
 {
 	if (x) {
@@ -235,7 +249,10 @@ static void del(void)
 		*(unsigned short *)pos = video_erase_char;
 	}
 }
-
+// 删除屏幕上与光标位置相关的部分，以屏幕为单位。csi - 控制序列引导码(Control Sequence     
+// Introducer)。     
+// ANSI 转义序列：'ESC [sJ'(s = 0 删除光标到屏幕底端；1 删除屏幕开始到光标处；2 整屏删除)。    
+// 参数：par - 对应上面 s。
 static void csi_J(int par)
 {
 	long count __asm__("cx");
@@ -264,7 +281,8 @@ static void csi_J(int par)
 		"D" (start),"a" (video_erase_char)
 		:"cx","di");
 }
-
+//// 删除行内与光标位置相关的部分，以一行为单位。     
+// ANSI转义字符序列：'ESC [sK'(s = 0 删除到行尾；1 从开始删除；2 整行都删除)。
 static void csi_K(int par)
 {
 	long count __asm__("cx");
@@ -309,7 +327,8 @@ void csi_m(void)
 			case 27:attr=0x07;break;
 		}
 }
-
+// 根据设置显示光标。     
+// 根据显示内存光标对应位置 pos，设置显示控制器光标的显示位置
 static inline void set_cursor(void)
 {
 	cli();
@@ -319,7 +338,8 @@ static inline void set_cursor(void)
 	outb_p(0xff&((pos-video_mem_start)>>1), video_port_val);
 	sti();
 }
-
+//// 发送对终端 VT100 的响应序列。     
+// 将响应序列放入读缓冲队列中。
 static void respond(struct tty_struct * tty)
 {
 	char * p = RESPONSE;
@@ -332,7 +352,7 @@ static void respond(struct tty_struct * tty)
 	sti();
 	copy_to_cooked(tty);
 }
-
+// 在光标处插入一空格字符。
 static void insert_char(void)
 {
 	int i=x;
@@ -346,7 +366,8 @@ static void insert_char(void)
 		p++;
 	}
 }
-
+/// 在光标处插入一行（则光标将处在新的空行上）。     
+// 将屏幕从光标所在行到屏幕底向下卷动一行。
 static void insert_line(void)
 {
 	int oldtop,oldbottom;
@@ -359,7 +380,7 @@ static void insert_line(void)
 	top=oldtop;
 	bottom=oldbottom;
 }
-
+// 删除光标处的一个字符
 static void delete_char(void)
 {
 	int i;
@@ -441,7 +462,7 @@ static void restore_cur(void)
 {
 	gotoxy(saved_x, saved_y);
 }
-
+// 控制台写入
 void con_write(struct tty_struct * tty)
 {
 	int nr;

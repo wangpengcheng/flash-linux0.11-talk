@@ -64,17 +64,19 @@ void buffer_init(long buffer_end);
 __asm__("incl %0\n\tandl $4095,%0"::"m" (head))
 
 typedef char buffer_block[BLOCK_SIZE];
-
+/**
+ * @brief 文件系统缓冲区头部展示
+ */
 struct buffer_head {
-	char * b_data;			/* pointer to data block (1024 bytes) */
-	unsigned long b_blocknr;	/* block number */
-	unsigned short b_dev;		/* device (0 = free) */
-	unsigned char b_uptodate;
-	unsigned char b_dirt;		/* 0-clean,1-dirty */
-	unsigned char b_count;		/* users using this block */
-	unsigned char b_lock;		/* 0 - ok, 1 -locked */
-	struct task_struct * b_wait;
-	struct buffer_head * b_prev;
+	char * b_data;			/* pointer to data block (1024 bytes) */ //< 磁盘数据块指针
+	unsigned long b_blocknr;	/* block number */  //< 块编号
+	unsigned short b_dev;		/* device (0 = free) */  //< 对应设备
+	unsigned char b_uptodate;   //< 是否需要进行更新
+	unsigned char b_dirt;		/* 0-clean,1-dirty */ //< 是否为脏数据--正在读写
+	unsigned char b_count;		/* users using this block */ //< 文件引用计数
+	unsigned char b_lock;		/* 0 - ok, 1 -locked */  //< 是否已经被锁住
+	struct task_struct * b_wait;  //< 等待中断的节点
+	struct buffer_head * b_prev;  // 链表指针
 	struct buffer_head * b_next;
 	struct buffer_head * b_prev_free;
 	struct buffer_head * b_next_free;
@@ -120,7 +122,9 @@ struct file {
 	struct m_inode * f_inode;
 	off_t f_pos;
 };
-
+/**
+ * @brief 超级块结构题
+ */
 struct super_block {
 	unsigned short s_ninodes;
 	unsigned short s_nzones;

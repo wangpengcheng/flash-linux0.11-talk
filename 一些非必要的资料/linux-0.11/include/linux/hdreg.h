@@ -3,8 +3,13 @@
  * Various sources. Check out some definitions (see comments with
  * a ques).
  */
+
+/**
+ * @brief 硬盘相关参数头文件
+ */
 #ifndef _HDREG_H
 #define _HDREG_H
+
 
 /* Hd controller regs. Ref: IBM AT Bios-listing */
 #define HD_DATA		0x1f0	/* _CTL when writing */

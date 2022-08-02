@@ -96,37 +96,40 @@ struct tss_struct {
 	struct i387_struct i387;
 };
 /**
- * @brief 任务结构体
+ * @brief 任务结构体，用于进行任务调度
+ * https://blog.csdn.net/ganfanren00001/article/details/125245060
+ * https://www.cnblogs.com/limingluzhu/p/5702486.html
  */
-struct task_struct {
-/* these are hardcoded - don't touch */
-	long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
-	long counter; ///< 计数器
-	long priority; // 优先级
-	long signal; // 任务信号量--主要用于信号通信
-	struct sigaction sigaction[32]; // 信号处理句柄数组
-	long blocked;	/* bitmap of masked signals */
-/* various fields */
-	int exit_code; ///< 退出状态码 0,1,-1
-	unsigned long start_code,end_code,end_data,brk,start_stack; // 运行过程中的中间变量地址
-	long pid,father,pgrp,session,leader; //
-	unsigned short uid,euid,suid; // 
-	unsigned short gid,egid,sgid;
-	long alarm;
-	long utime,stime,cutime,cstime,start_time;
-	unsigned short used_math;
-/* file system info */
-	int tty;		/* -1 if no tty, so it must be signed */
-	unsigned short umask;
-	struct m_inode * pwd;
-	struct m_inode * root;
-	struct m_inode * executable;
-	unsigned long close_on_exec;
-	struct file * filp[NR_OPEN]; // 文件块大小
-/* ldt for this task 0 - zero 1 - cs 2 - ds&ss */
-	struct desc_struct ldt[3];
-/* tss for this task */
-	struct tss_struct tss;
+struct task_struct
+{
+    /* these are hardcoded - don't touch */
+    long state;                                                     /* -1 unrunnable, 0 runnable, >0 stopped */
+    long counter;                                                   //< 进程拥有的时间片，当一个时钟中断到来，当前占有CPU的进程时间片会消耗1，进程调度函数schedule会会遍历任务队列选择时间片最大的进程上CPU
+    long priority;                                                  //< 优先级
+    long signal;                                                    //< 任务信号量--主要用于信号通信
+    struct sigaction sigaction[32];                                 //< 信号处理句柄数组
+    long blocked;                                                   /* bitmap of masked signals */
+                                                                    /* various fields */
+    int exit_code;                                                  //< 退出状态码 0,1,-1
+    unsigned long start_code, end_code, end_data, brk, start_stack; //< 运行过程中的中间变量地址
+    long pid, father, pgrp, session, leader;                        //< 进程相关session
+    unsigned short uid, euid, suid;                                 //< 进程所属用户ID
+    unsigned short gid, egid, sgid; //< 对应用户组ID
+    long alarm;
+    long utime, stime, cutime, cstime, start_time; // 用户态时间、核心态时间、子进程用户态和核心态时间。
+    unsigned short used_math;
+    /* file system info */
+    int tty; /* -1 if no tty, so it must be signed */  //< 是否打开了控制台
+    unsigned short umask;
+    struct m_inode *pwd;  // 当前文件夹
+    struct m_inode *root; // root 根目录
+    struct m_inode *executable; // 是否可执行
+    unsigned long close_on_exec;
+    struct file *filp[NR_OPEN];  //< 文件句柄数组
+                                /* ldt for this task 0 - zero 1 - cs 2 - ds&ss */
+    struct desc_struct ldt[3];  //< 描述结构体
+    /* tss for this task */
+    struct tss_struct tss;  //< 任务TSS寄存器
 };
 
 /*
@@ -162,77 +165,79 @@ extern struct task_struct *current;
 extern long volatile jiffies;
 extern long startup_time;
 
-#define CURRENT_TIME (startup_time+jiffies/HZ)
+#define CURRENT_TIME (startup_time + jiffies / HZ)
 
 extern void add_timer(long jiffies, void (*fn)(void));
-extern void sleep_on(struct task_struct ** p);
-extern void interruptible_sleep_on(struct task_struct ** p);
-extern void wake_up(struct task_struct ** p);
+extern void sleep_on(struct task_struct **p);
+extern void interruptible_sleep_on(struct task_struct **p);
+extern void wake_up(struct task_struct **p);
 
 /*
  * Entry into gdt where to find first TSS. 0-nul, 1-cs, 2-ds, 3-syscall
  * 4-TSS0, 5-LDT0, 6-TSS1 etc ...
  */
 #define FIRST_TSS_ENTRY 4
-#define FIRST_LDT_ENTRY (FIRST_TSS_ENTRY+1)
-#define _TSS(n) ((((unsigned long) n)<<4)+(FIRST_TSS_ENTRY<<3))
-#define _LDT(n) ((((unsigned long) n)<<4)+(FIRST_LDT_ENTRY<<3))
-#define ltr(n) __asm__("ltr %%ax"::"a" (_TSS(n)))
-#define lldt(n) __asm__("lldt %%ax"::"a" (_LDT(n)))
-#define str(n) \
-__asm__("str %%ax\n\t" \
-	"subl %2,%%eax\n\t" \
-	"shrl $4,%%eax" \
-	:"=a" (n) \
-	:"a" (0),"i" (FIRST_TSS_ENTRY<<3))
+#define FIRST_LDT_ENTRY (FIRST_TSS_ENTRY + 1)
+#define _TSS(n) ((((unsigned long)n) << 4) + (FIRST_TSS_ENTRY << 3))
+#define _LDT(n) ((((unsigned long)n) << 4) + (FIRST_LDT_ENTRY << 3))
+#define ltr(n) __asm__("ltr %%ax" ::"a"(_TSS(n)))
+#define lldt(n) __asm__("lldt %%ax" ::"a"(_LDT(n)))
+#define str(n)                  \
+    __asm__("str %%ax\n\t"      \
+            "subl %2,%%eax\n\t" \
+            "shrl $4,%%eax"     \
+            : "=a"(n)           \
+            : "a"(0), "i"(FIRST_TSS_ENTRY << 3))
 /*
  *	switch_to(n) should switch tasks to task nr n, first
  * checking that n isn't the current task, in which case it does nothing.
  * This also clears the TS-flag if the task we switched to has used
  * tha math co-processor latest.
  */
-#define switch_to(n) {\
-struct {long a,b;} __tmp; \
-__asm__("cmpl %%ecx,_current\n\t" \
-	"je 1f\n\t" \
-	"movw %%dx,%1\n\t" \
-	"xchgl %%ecx,_current\n\t" \
-	"ljmp %0\n\t" \
-	"cmpl %%ecx,_last_task_used_math\n\t" \
-	"jne 1f\n\t" \
-	"clts\n" \
-	"1:" \
-	::"m" (*&__tmp.a),"m" (*&__tmp.b), \
-	"d" (_TSS(n)),"c" ((long) task[n])); \
-}
+#define switch_to(n)                                  \
+    {                                                 \
+        struct                                        \
+        {                                             \
+            long a, b;                                \
+        } __tmp;                                      \
+        __asm__("cmpl %%ecx,_current\n\t"             \
+                "je 1f\n\t"                           \
+                "movw %%dx,%1\n\t"                    \
+                "xchgl %%ecx,_current\n\t"            \
+                "ljmp %0\n\t"                         \
+                "cmpl %%ecx,_last_task_used_math\n\t" \
+                "jne 1f\n\t"                          \
+                "clts\n"                              \
+                "1:" ::"m"(*&__tmp.a),                \
+                "m"(*&__tmp.b),                       \
+                "d"(_TSS(n)), "c"((long)task[n]));    \
+    }
 
-#define PAGE_ALIGN(n) (((n)+0xfff)&0xfffff000)
+#define PAGE_ALIGN(n) (((n) + 0xfff) & 0xfffff000)
 
-#define _set_base(addr,base) \
-__asm__("movw %%dx,%0\n\t" \
-	"rorl $16,%%edx\n\t" \
-	"movb %%dl,%1\n\t" \
-	"movb %%dh,%2" \
-	::"m" (*((addr)+2)), \
-	  "m" (*((addr)+4)), \
-	  "m" (*((addr)+7)), \
-	  "d" (base) \
-	:"dx")
+#define _set_base(addr, base)                    \
+    __asm__("movw %%dx,%0\n\t"                   \
+            "rorl $16,%%edx\n\t"                 \
+            "movb %%dl,%1\n\t"                   \
+            "movb %%dh,%2" ::"m"(*((addr) + 2)), \
+            "m"(*((addr) + 4)),                  \
+            "m"(*((addr) + 7)),                  \
+            "d"(base)                            \
+            : "dx")
 
-#define _set_limit(addr,limit) \
-__asm__("movw %%dx,%0\n\t" \
-	"rorl $16,%%edx\n\t" \
-	"movb %1,%%dh\n\t" \
-	"andb $0xf0,%%dh\n\t" \
-	"orb %%dh,%%dl\n\t" \
-	"movb %%dl,%1" \
-	::"m" (*(addr)), \
-	  "m" (*((addr)+6)), \
-	  "d" (limit) \
-	:"dx")
+#define _set_limit(addr, limit)            \
+    __asm__("movw %%dx,%0\n\t"             \
+            "rorl $16,%%edx\n\t"           \
+            "movb %1,%%dh\n\t"             \
+            "andb $0xf0,%%dh\n\t"          \
+            "orb %%dh,%%dl\n\t"            \
+            "movb %%dl,%1" ::"m"(*(addr)), \
+            "m"(*((addr) + 6)),            \
+            "d"(limit)                     \
+            : "dx")
 
-#define set_base(ldt,base) _set_base( ((char *)&(ldt)) , base )
-#define set_limit(ldt,limit) _set_limit( ((char *)&(ldt)) , (limit-1)>>12 )
+#define set_base(ldt, base) _set_base(((char *)&(ldt)), base)
+#define set_limit(ldt, limit) _set_limit(((char *)&(ldt)), (limit - 1) >> 12)
 
 #define _get_base(addr) ({\
 unsigned long __base; \
@@ -244,13 +249,13 @@ __asm__("movb %3,%%dh\n\t" \
 	:"m" (*((addr)+2)), \
 	 "m" (*((addr)+4)), \
 	 "m" (*((addr)+7))); \
-__base;})
+__base; })
 
-#define get_base(ldt) _get_base( ((char *)&(ldt)) )
-
+#define get_base(ldt) _get_base(((char *)&(ldt)))
+// 局部描述符表中代码段描述符项中段限长
 #define get_limit(segment) ({ \
 unsigned long __limit; \
 __asm__("lsll %1,%0\n\tincl %0":"=r" (__limit):"r" (segment)); \
-__limit;})
+__limit; })
 
 #endif

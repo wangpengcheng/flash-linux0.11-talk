@@ -19,6 +19,9 @@ __asm__ ("outb %%al,%%dx\n" \
 		"1:\tjmp 1f\n" \
 		"1:"::"a" (value),"d" (port))
 
+/**
+ * @brief  获取指定端口的输出数据
+ */
 #define inb_p(port) ({ \
 unsigned char _v; \
 __asm__ volatile ("inb %%dx,%%al\n" \

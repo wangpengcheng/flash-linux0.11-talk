@@ -13,6 +13,10 @@
         "head.h": "c",
         "unistd.h": "c",
         "types.h": "c",
-        "signal.h": "c"
+        "signal.h": "c",
+        "kernel.h": "c",
+        "config.h": "c",
+        "hdreg.h": "c",
+        "segment.h": "c"
     }
 }

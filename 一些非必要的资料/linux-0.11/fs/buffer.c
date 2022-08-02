@@ -40,17 +40,23 @@ static inline void wait_on_buffer(struct buffer_head * bh)
 		sleep_on(&bh->b_wait);
 	sti();
 }
-
+/**
+ * @brief  将数据同步到硬盘
+ * https://blog.csdn.net/THEANARKH/article/details/89790332
+ * @return int
+ */
 int sys_sync(void)
 {
 	int i;
 	struct buffer_head * bh;
-
+	// 把所有inode写入buffer，等待回写，见下面代码
 	sync_inodes();		/* write out inodes into buffers */
 	bh = start_buffer;
+
 	for (i=0 ; i<NR_BUFFERS ; i++,bh++) {
 		wait_on_buffer(bh);
 		if (bh->b_dirt)
+			// 请求底层写硬盘操作，等待底层驱动回写到硬盘，不一定立刻写入
 			ll_rw_block(WRITE,bh);
 	}
 	return 0;

@@ -20,13 +20,30 @@
  */
 size	= 1024		/* must be a power of two ! And MUST be the same
 			   as in tty_io.c !!!! */
-head = 4
-tail = 8
-proc_list = 12
-buf = 16
-
+head = 4  // 缓冲区中头指针字段偏移
+tail = 8  // 缓冲区中尾指针字段偏移
+proc_list = 12 // 待该缓冲队列的进程字段偏移。
+buf = 16  // 缓冲区字段偏移
+// mode 是键盘特殊键的按下状态标志。     
+// 表示大小写转换键(caps)、交换键(alt)、控制键(ctrl)和换档键(shift)的状态。     
+// 位 7 caps 键按下；     
+// 位 6 caps 键的状态(应该与 leds 中的对应标志位一样)；     
+// 位 5 右 alt 键按下；     
+// 位 4 左 alt 键按下；     
+// 位 3 右 ctrl 键按下；     
+// 位 2 左 ctrl 键按下；     
+// 位 1 右 shift 键按下；     
+// 位 0 左 shift 键按下。
 mode:	.byte 0		/* caps, alt, ctrl and shift mode */
+// 数字锁定键(num-lock)、大小写转换键(caps-lock)和滚动锁定键(scroll-lock)的 LED发光管状态。     
+// 位 7-3 全 0 不用；     
+// 位 2 caps-lock；
+// 位 1 num-lock(初始置 1，也即设置数字锁定键(num-lock)发光管为亮)；     
+// 位 0 scroll-lock。
 leds:	.byte 2		/* num-lock, caps, scroll-lock mode (nom-lock on) */
+// 当扫描码是0xe0 或 0xe1 时，置该标志。表示其后还跟随着 1 个或 2 个字符扫描码，参见列表后说明。    
+// 位 1 =1 收到 0xe1 标志；     
+// 位 0 =1 收到 0xe0 标志。
 e0:	.byte 0
 
 /*
@@ -34,6 +51,11 @@ e0:	.byte 0
  *  keyboard scan-code and converts it into the appropriate
  *  ascii character(s).
  */
+/*
+ * n_int 是实际的中断处理子程序，用于读键盘扫描码并将其转换      
+ * 成相应的 ascii 字符。
+ **/
+// 键盘中断处理程序入口点。
 _keyboard_interrupt:
 	pushl %eax
 	pushl %ebx
@@ -41,13 +63,13 @@ _keyboard_interrupt:
 	pushl %edx
 	push %ds
 	push %es
-	movl $0x10,%eax
+	movl $0x10,%eax  // ds、es 段寄存器设置为内核数据段
 	mov %ax,%ds
 	mov %ax,%es
 	xorl %al,%al		/* %eax is scan code */
-	inb $0x60,%al
-	cmpb $0xe0,%al
-	je set_e0
+	inb $0x60,%al  // 读取扫码至 al
+	cmpb $0xe0,%al // 检查是否为0xe0,是跳转至set_e0
+	je set_e0  // 
 	cmpb $0xe1,%al
 	je set_e1
 	call key_table(,%eax,4)
@@ -66,8 +88,8 @@ e0_e1:	inb $0x61,%al
 	movb $0x20,%al
 	outb %al,$0x20
 	pushl $0
-	call _do_tty_interrupt
-	addl $4,%esp
+	call _do_tty_interrupt // 将收到数据复制成规范模式数据并存放在规范字符缓冲队列中
+	addl $4,%esp // 丢弃入栈的参数，弹出保留的寄存器，并中断返回。
 	pop %es
 	pop %ds
 	popl %edx
@@ -211,7 +233,7 @@ func:
 	pushl %eax
 	pushl %ecx
 	pushl %edx
-	call _show_stat
+	call _show_stat   // 调用显示各个人物状态函数
 	popl %edx
 	popl %ecx
 	popl %eax
@@ -221,7 +243,7 @@ func:
 	jbe ok_func
 	subb $18,%al
 	cmpb $10,%al
-	jb end_func
+	jb end_func   // 放入 4 个字符序列，如果放不下，则返回。
 	cmpb $11,%al
 	ja end_func
 ok_func:
