@@ -9,25 +9,59 @@
 
 #include <linux/sched.h>
 #include <linux/kernel.h>
+/**
+ * @brief 将指定地址(addr)
+ * 处的一块内存清零。
+ * 输入：eax = 0
+ * ecx = BLOCK_SIZE / 4
+ * edi = addr
+ */
+#define clear_block(addr)                          \
+    __asm__("cld\n\t"                              \
+            "rep\n\t"                              \
+            "stosl" ::"a"(0),                      \ 
+            "c"(BLOCK_SIZE / 4), "D"((long)(addr)) \
+            : "cx", "di")
 
-#define clear_block(addr) \
-__asm__("cld\n\t" \
-	"rep\n\t" \
-	"stosl" \
-	::"a" (0),"c" (BLOCK_SIZE/4),"D" ((long) (addr)):"cx","di")
-
-#define set_bit(nr,addr) ({\
+/**
+ * @brief 设置指定地址
+ * 开始的第nr个位偏移处的
+ * 比特位(nr 可以大于32)，返回原比特位(0或1)
+ * 输入：%0 - eax(返回值)
+ * %1 - eax(0)
+ * %2 - nr
+ * %3 - (addr)
+ * 
+ */
+#define set_bit(nr, addr) ({\
 register int res __asm__("ax"); \
 __asm__ __volatile__("btsl %2,%3\n\tsetb %%al": \
 "=a" (res):"0" (0),"r" (nr),"m" (*(addr))); \
-res;})
+res; })
 
-#define clear_bit(nr,addr) ({\
+/**
+ * @brief 复位指定地址开始的nr位偏移处的比特位
+ * 返回原比特位的反码(1 或者 0)
+ * 输入：%0 - eax(返回值)
+ * %1 - eax(0)
+ * %2 - nr，位偏移值
+ * %3 - (addr)，addr的内容
+ * 
+ */
+#define clear_bit(nr, addr) ({\
 register int res __asm__("ax"); \
 __asm__ __volatile__("btrl %2,%3\n\tsetnb %%al": \
 "=a" (res):"0" (0),"r" (nr),"m" (*(addr))); \
-res;})
+res; })
 
+/**
+ * @brief 从addr 开始寻找第1个0 值比特位
+ * 输入：%0 -ecx(返回值)
+ * %1 - ecx(0)
+ * %2 - esi(addr)
+ * 在addr 指定地址开始的位图中寻找第一个是0的比特位，
+ * 并将其距离addr的比特偏移值返回
+ */
 #define find_first_zero(addr) ({ \
 int __res; \
 __asm__("cld\n" \

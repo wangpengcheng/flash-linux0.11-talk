@@ -87,7 +87,7 @@ extern struct request request[NR_REQUEST];
  * 指针指向当前正在等待中的任务队列
  */
 extern struct task_struct * wait_for_request;
-
+#define MAJOR_NR 3
 /**
  * @brief 定义主设备号
  * 在块设备驱动程序（如 hd.c）要包含此头文件时，必须先定义驱动程序对应设备的主设备号。这样     

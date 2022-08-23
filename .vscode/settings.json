@@ -17,6 +17,7 @@
         "kernel.h": "c",
         "config.h": "c",
         "hdreg.h": "c",
-        "segment.h": "c"
+        "segment.h": "c",
+        "termios.h": "c"
     }
 }

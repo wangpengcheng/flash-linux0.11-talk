@@ -49,6 +49,7 @@ struct tty_queue
 #define SUSPEND_CHAR(tty) ((tty)->termios.c_cc[VSUSP])
 /**
  * @brief 终端设备描述数据结构体
+ * 用于每个不同的用户进行数据更新
  */
 struct tty_struct
 {

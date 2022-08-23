@@ -55,12 +55,15 @@ void invalidate_inodes(int dev)
 		}
 	}
 }
-
+/**
+ * @brief 同步inode节点
+ * 遍历所有inode 表进行写入
+ */
 void sync_inodes(void)
 {
 	int i;
 	struct m_inode * inode;
-
+    // 
 	inode = 0+inode_table;
 	for(i=0 ; i<NR_INODE ; i++,inode++) {
 		wait_on_inode(inode);

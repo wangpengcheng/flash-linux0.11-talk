@@ -79,7 +79,7 @@ static unsigned long	scr_end;	/* Used for EGA/VGA fast scroll	*/
 static unsigned long	pos;  // 综合位置
 static unsigned long	x,y;  // 当前光标位置
 static unsigned long	top,bottom;  // 滚动时顶行行号
-static unsigned long	state=0;
+static unsigned long	state=0;  // 当前文字状态
 static unsigned long	npar,par[NPAR];
 static unsigned long	ques=0;
 static unsigned char	attr=0x07;
@@ -395,7 +395,7 @@ static void delete_char(void)
 	}
 	*p = video_erase_char;
 }
-
+// 删除光标所在行
 static void delete_line(void)
 {
 	int oldtop,oldbottom;
@@ -408,7 +408,7 @@ static void delete_line(void)
 	top=oldtop;
 	bottom=oldbottom;
 }
-
+// 在光标处插入nr 个字符
 static void csi_at(unsigned int nr)
 {
 	if (nr > video_num_columns)
@@ -462,13 +462,15 @@ static void restore_cur(void)
 {
 	gotoxy(saved_x, saved_y);
 }
-// 控制台写入
+// 控制台写入函数
+// 从终端对应的tty 写缓冲区取字符，并显示在屏幕上
 void con_write(struct tty_struct * tty)
 {
 	int nr;
 	char c;
-
+    // 获取缓冲区中现有字符
 	nr = CHARS(tty->write_q);
+    // 遍历进行打印
 	while (nr--) {
 		GETCH(tty->write_q,c);
 		switch(state) {
@@ -622,6 +624,7 @@ void con_write(struct tty_struct * tty)
 				}
 		}
 	}
+    // 最后根据上面设置的光标位置，向显示器发送光标显示位置
 	set_cursor();
 }
 
@@ -635,18 +638,28 @@ void con_write(struct tty_struct * tty)
  * Reads the information preserved by setup.s to determine the current display
  * type and sets everything accordingly.
  */
+
+/**
+ * @brief 
+ * 键盘中断控制台初始化函数，用于初始化中断控制台
+ * 
+ * 读取setup.s 程序保存的信息，用以确定当前显示器类型，
+ * 并设置所有相关参数
+ */
 void con_init(void)
 {
+	// 
 	register unsigned char a;
 	char *display_desc = "????";
 	char *display_ptr;
-
+	// 显示器显示字符列数目
 	video_num_columns = ORIG_VIDEO_COLS;
+	// 计算行
 	video_size_row = video_num_columns * 2;
 	video_num_lines = ORIG_VIDEO_LINES;
 	video_page = ORIG_VIDEO_PAGE;
 	video_erase_char = 0x0720;
-	
+	// 原始模式为7--单色显示器
 	if (ORIG_VIDEO_MODE == 7)			/* Is this a monochrome display? */
 	{
 		video_mem_start = 0xb0000;
@@ -708,7 +721,8 @@ void con_init(void)
 	outb(a,0x61);
 }
 /* from bsd-net-2: */
-
+//// 停止蜂鸣。
+// 复位 8255A PB 端口的位 1 和位 0。
 void sysbeepstop(void)
 {
 	/* disable counter 2 */
@@ -717,6 +731,10 @@ void sysbeepstop(void)
 
 int beepcount = 0;
 
+// 开通蜂鸣。     
+// 8255A 芯片 PB 端口的位 1 用作扬声器的开门信号；位 0 用作 8253 定时器 2 的门信号，该定时器的     
+// 输出脉冲送往扬声器，作为扬声器发声的频率。因此要使扬声器蜂鸣，需要两步：首先开启 PB 端口     
+// 位 1 和位 0（置位），然后设置定时器发送一定的定时频率即可。
 static void sysbeep(void)
 {
 	/* enable counter 2 */

@@ -68,18 +68,18 @@ typedef char buffer_block[BLOCK_SIZE];
  * @brief 文件系统缓冲区头部展示
  */
 struct buffer_head {
-	char * b_data;			/* pointer to data block (1024 bytes) */ //< 磁盘数据块指针
+	char * b_data;			/* pointer to data block (1024 bytes) */ //< 数据块指针,指向高速缓存内存块
 	unsigned long b_blocknr;	/* block number */  //< 块编号
 	unsigned short b_dev;		/* device (0 = free) */  //< 对应设备
-	unsigned char b_uptodate;   //< 是否需要进行更新
+	unsigned char b_uptodate;   //< 是否需要进行更新--存在可读写的内容
 	unsigned char b_dirt;		/* 0-clean,1-dirty */ //< 是否为脏数据--正在读写
 	unsigned char b_count;		/* users using this block */ //< 文件引用计数
 	unsigned char b_lock;		/* 0 - ok, 1 -locked */  //< 是否已经被锁住
 	struct task_struct * b_wait;  //< 等待中断的节点
-	struct buffer_head * b_prev;  // 链表指针
-	struct buffer_head * b_next;
-	struct buffer_head * b_prev_free;
-	struct buffer_head * b_next_free;
+	struct buffer_head * b_prev;  //< 链表指针前一个
+	struct buffer_head * b_next;  //< 链表指针后一个
+	struct buffer_head * b_prev_free; //< 空闲链表指针，前一个
+	struct buffer_head * b_next_free; //< 空闲链表指针，后一个
 };
 
 struct d_inode {
@@ -123,28 +123,29 @@ struct file {
 	off_t f_pos;
 };
 /**
- * @brief 超级块结构题
+ * @brief 超级块结构体
  */
-struct super_block {
-	unsigned short s_ninodes;
-	unsigned short s_nzones;
-	unsigned short s_imap_blocks;
-	unsigned short s_zmap_blocks;
-	unsigned short s_firstdatazone;
-	unsigned short s_log_zone_size;
-	unsigned long s_max_size;
-	unsigned short s_magic;
-/* These are only in memory */
-	struct buffer_head * s_imap[8];
-	struct buffer_head * s_zmap[8];
-	unsigned short s_dev;
-	struct m_inode * s_isup;
-	struct m_inode * s_imount;
-	unsigned long s_time;
-	struct task_struct * s_wait;
-	unsigned char s_lock;
-	unsigned char s_rd_only;
-	unsigned char s_dirt;
+struct super_block
+{
+	unsigned short s_ninodes;		//< i节点数目
+	unsigned short s_nzones;		//< 逻辑块数目
+	unsigned short s_imap_blocks;	//< i 节点位图所占块数目
+	unsigned short s_zmap_blocks;	//< 逻辑块位图所占块数
+	unsigned short s_firstdatazone; //< 第一个逻辑块好
+	unsigned short s_log_zone_size; //< log2(数据块数目/逻辑块)
+	unsigned long s_max_size;		//< 最大文件长度
+	unsigned short s_magic;			//< 文件系统幻数
+									/* These are only in memory */
+	struct buffer_head *s_imap[8];	//< i节点位图在高速缓冲块指针数组
+	struct buffer_head *s_zmap[8];	//< 逻辑块位图在高速缓冲块指针数组
+	unsigned short s_dev;			//< 超级块所在设备号
+	struct m_inode *s_isup;			//< 被安装文件系统根目录i节点
+	struct m_inode *s_imount;		//< 该文件系统被安装到的i节点
+	unsigned long s_time;			//< 修改时间
+	struct task_struct *s_wait;		//< 等待本超级块的进程指针
+	unsigned char s_lock;			//< 锁定标志
+	unsigned char s_rd_only;		//< 只读标志
+	unsigned char s_dirt;			//< 已经被修改(脏)标志
 };
 
 struct d_super_block {
