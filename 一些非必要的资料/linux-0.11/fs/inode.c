@@ -11,20 +11,31 @@
 #include <linux/kernel.h>
 #include <linux/mm.h>
 #include <asm/system.h>
-
+/**
+ * @brief 内存中的i节点表
+ */
 struct m_inode inode_table[NR_INODE]={{0,},};
 
 static void read_inode(struct m_inode * inode);
 static void write_inode(struct m_inode * inode);
-
+/**
+ * @brief 等待指定的inode 节点被释放
+ * 如果i节点已经被锁定，则将当前任务设置为不可中断
+ * 状态，直到该i节点解锁
+ * @param  inode            目标inode指针
+ */
 static inline void wait_on_inode(struct m_inode * inode)
 {
 	cli();
+    // 目标线程进行等待
 	while (inode->i_lock)
 		sleep_on(&inode->i_wait);
 	sti();
 }
-
+/**
+ * @brief  对指定的i节点上锁(锁定指定的i节点)
+ * @param  inode            目标i节点
+ */
 static inline void lock_inode(struct m_inode * inode)
 {
 	cli();
@@ -33,7 +44,10 @@ static inline void lock_inode(struct m_inode * inode)
 	inode->i_lock=1;
 	sti();
 }
-
+/**
+ * @brief inode 节点解锁
+ * @param  inode           目标inode指针
+ */
 static inline void unlock_inode(struct m_inode * inode)
 {
 	inode->i_lock=0;

@@ -78,17 +78,29 @@ __asm__("cld\n" \
 	:"=c" (__res):"c" (0),"S" (addr):"ax","dx","si"); \
 __res;})
 
+
+/**
+ * @brief  释放设备dev对应数据区中的逻辑块 block
+ * @param  dev              设备名称
+ * @param  block            逻辑块号
+ */
 void free_block(int dev, int block)
 {
+    // 超级块结构体，包含inode等信息
 	struct super_block * sb;
+    // 高速缓冲区块指针
 	struct buffer_head * bh;
-
+    // 获取设备对应文件快
 	if (!(sb = get_super(dev)))
 		panic("trying to free block on nonexistent device");
+    // 检查逻辑快是否越界
 	if (block < sb->s_firstdatazone || block >= sb->s_nzones)
 		panic("trying to free block not in datazone");
+    // 查询对应缓冲块
 	bh = get_hash_table(dev,block);
+    // 缓冲块
 	if (bh) {
+        // 如果不为1 就释放缓冲块
 		if (bh->b_count != 1) {
 			printk("trying to free block (%04x:%d), count=%d\n",
 				dev,block,bh->b_count);
@@ -98,46 +110,70 @@ void free_block(int dev, int block)
 		bh->b_uptodate=0;
 		brelse(bh);
 	}
+    // 计算相对的逻辑块号
 	block -= sb->s_firstdatazone - 1 ;
+    // 清除逻辑块引用，对应的高速标志位
 	if (clear_bit(block&8191,sb->s_zmap[block/8192]->b_data)) {
 		printk("block (%04x:%d) ",dev,block+sb->s_firstdatazone-1);
 		panic("free_block: bit already cleared");
 	}
+    // 设置已修改标志位为1
 	sb->s_zmap[block/8192]->b_dirt = 1;
 }
-
+/**
+ * @brief  向dev设备申请一个新的逻辑块(盘块、区块) 返回逻辑号(盘块号)
+ * 并重置逻辑块block的逻辑块位图比特位
+ * @param  dev              设备名称
+ * @return int              最终返回结果
+ */
 int new_block(int dev)
 {
 	struct buffer_head * bh;
 	struct super_block * sb;
 	int i,j;
-
+    // 查询对应超级块
 	if (!(sb = get_super(dev)))
 		panic("trying to get new block from nonexistant device");
 	j = 8192;
+    // 遍历超级块对应逻辑位图，获取放置该逻辑块的块号
 	for (i=0 ; i<8 ; i++)
-		if (bh=sb->s_zmap[i])
-			if ((j=find_first_zero(bh->b_data))<8192)
-				break;
+		if (bh=sb->s_zmap[i]) {
+                // 查找第一个空闲的bit位
+                if ((j = find_first_zero(bh->b_data)) < 8192) {
+                    break;
+                }
+            }
+    // 没有找到直接返回0
 	if (i>=8 || !bh || j>=8192)
 		return 0;
+    // 将数据指针指向对应的标志位
 	if (set_bit(j,bh->b_data))
 		panic("new_block: bit already set");
 	bh->b_dirt = 1;
+    // 计算相对标志位--块号
 	j += i*8192 + sb->s_firstdatazone-1;
 	if (j >= sb->s_nzones)
 		return 0;
+    // 获取读取设备上的新逻辑块数据
+    // 失败则死机
 	if (!(bh=getblk(dev,j)))
 		panic("new_block: cannot get block");
-	if (bh->b_count != 1)
+	// 引用计数应该为1，否则死机
+    if (bh->b_count != 1)
 		panic("new block: count is != 1");
+    // 将该逻辑块清零，并设置对应标志位
 	clear_block(bh->b_data);
 	bh->b_uptodate = 1;
 	bh->b_dirt = 1;
+    // 释放对应缓冲区
 	brelse(bh);
+    // 返回对应逻辑块号
 	return j;
 }
-
+/**
+ * @brief  清除inode信息
+ * @param  inode            inode节点指针
+ */
 void free_inode(struct m_inode * inode)
 {
 	struct super_block * sb;
@@ -145,51 +181,67 @@ void free_inode(struct m_inode * inode)
 
 	if (!inode)
 		return;
+    // 设备号为0，清空对应i节点占用内存
 	if (!inode->i_dev) {
 		memset(inode,0,sizeof(*inode));
 		return;
 	}
+    // 校验引用计数
 	if (inode->i_count>1) {
 		printk("trying to free inode with count=%d\n",inode->i_count);
 		panic("free_inode");
 	}
+    // 检查目录连接数不为0
 	if (inode->i_nlinks)
 		panic("trying to free inode with links");
+    // 获取上级超级块
 	if (!(sb = get_super(inode->i_dev)))
 		panic("trying to free inode on nonexistent device");
+    // 检查节点号是否越界
 	if (inode->i_num < 1 || inode->i_num > sb->s_ninodes)
 		panic("trying to free inode 0 or nonexistant inode");
-	if (!(bh=sb->s_imap[inode->i_num>>13]))
+	// 检查对应的节点位图是否存在
+    if (!(bh=sb->s_imap[inode->i_num>>13]))
 		panic("nonexistent imap in superblock");
+    // 清除对应的节点位图
 	if (clear_bit(inode->i_num&8191,bh->b_data))
 		printk("free_inode: bit already cleared.\n\r");
-	bh->b_dirt = 1;
+	// 修改对应标志位
+    bh->b_dirt = 1;
+    // 清空整个内存
 	memset(inode,0,sizeof(*inode));
 }
-
+/**
+ * @brief  创建新的inode节点
+ * @param  dev              对应设备
+ * @return struct m_inode*  生成的inode 节点
+ */
 struct m_inode * new_inode(int dev)
 {
 	struct m_inode * inode;
 	struct super_block * sb;
 	struct buffer_head * bh;
 	int i,j;
-
+    // 查询空的inode
 	if (!(inode=get_empty_inode()))
 		return NULL;
 	if (!(sb = get_super(dev)))
 		panic("new_inode with unknown device");
 	j = 8192;
+    // 查询空闲标志位
 	for (i=0 ; i<8 ; i++)
 		if (bh=sb->s_imap[i])
 			if ((j=find_first_zero(bh->b_data))<8192)
 				break;
+    // 还回inode
 	if (!bh || j >= 8192 || j+i*8192 > sb->s_ninodes) {
 		iput(inode);
 		return NULL;
 	}
 	if (set_bit(j,bh->b_data))
 		panic("new_inode: bit already set");
-	bh->b_dirt = 1;
+	// 设置相关标志位
+    bh->b_dirt = 1;
 	inode->i_count=1;
 	inode->i_nlinks=1;
 	inode->i_dev=dev;
