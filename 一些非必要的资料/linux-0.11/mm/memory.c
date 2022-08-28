@@ -92,7 +92,9 @@ void free_page(unsigned long addr)
 	if (addr >= HIGH_MEMORY)
 		panic("trying to free nonexistent page");
 	addr -= LOW_MEM;
+    // 计算页编号
 	addr >>= 12;
+    // 操作并返回
 	if (mem_map[addr]--) return;
 	mem_map[addr]=0;
 	panic("trying to free free page");

@@ -43,7 +43,10 @@ static void free_dind(int dev,int block)
 	}
 	free_block(dev,block);
 }
-
+/**
+ * @brief 释放inode对应逻辑块
+ * @param  inode            对应文件inode指针
+ */
 void truncate(struct m_inode * inode)
 {
 	int i;

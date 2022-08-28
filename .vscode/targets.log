@@ -1,0 +1,234 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+make: *** No rule to make target 'all'.  Stop.
+
+# GNU Make 4.2.1
+# Built for x86_64-redhat-linux-gnu
+# Copyright (C) 1988-2016 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+
+# Make data base, printed on Sun Aug 28 19:19:54 2022
+
+# Variables
+
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# automatic
+?F = $(notdir $?)
+# default
+.SHELLFLAGS := -c
+# environment
+VSCODE_AGENT_FOLDER = /home/jinfang/.vscode-server
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# automatic
+@F = $(notdir $@)
+# default
+MAKE_VERSION := 4.2.1
+# makefile
+CURDIR := /home/jinfang/Github/cpp/flash-linux0.11-talk
+# makefile
+SHELL = /bin/sh
+# environment
+JRE_HOME = /usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//jre
+# environment
+VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"cc0490d1397af23dc5bf44a96fe15dbb.zh-cn","_translationsConfigFile":"/home/jinfang/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn/tcf.json","_cacheRoot":"/home/jinfang/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn","_resolvedLanguagePackCoreLocation":"/home/jinfang/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn/e4503b30fc78200f846c62cf8091b76ff5547662","_corruptedFile":"/home/jinfang/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn/corrupted.info","_languagePackSupport":true}
+# environment
+_ = /usr/bin/make
+# environment
+MAVEN_HOME = /usr/local/maven3
+# makefile
+MAKEFILE_LIST := 
+# environment
+GO111MODULE = on
+# 'override' directive
+GNUMAKEFLAGS := 
+# environment
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1001/bus
+# environment
+LESSOPEN = ||/usr/bin/lesspipe.sh %s
+# environment
+VSCODE_CWD = /home/jinfang
+# environment
+SSH_CONNECTION = 61.173.28.189 32438 10.0.4.11 22
+# environment
+PATH = /home/jinfang/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662/bin/remote-cli:/home/jinfang/.local/bin:/home/jinfang/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/jinfang/goroot/bin:/home/jinfang/go/bin:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//bin:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//jre/bin:/usr/local/maven3/bin:/home/jinfang/goroot/bin:/home/jinfang/go/bin:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//bin:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//jre/bin:/usr/local/maven3/bin
+# environment
+XDG_RUNTIME_DIR = /run/user/1001
+# environment
+GOPATH = /home/jinfang/go
+# environment
+ELECTRON_RUN_AS_NODE = 1
+# environment
+VSCODE_IPC_HOOK_CLI = /run/user/1001/vscode-ipc-3d10e083-5da9-431f-be92-75322695efd5.sock
+# default
+.FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
+# automatic
+%F = $(notdir $%)
+# environment
+PWD = /home/jinfang/Github/cpp/flash-linux0.11-talk
+# default
+.LOADED := 
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# environment
+HISTTIMEFORMAT = %F %T 
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
+# environment
+HOME = /home/jinfang
+# environment
+LOGNAME = jinfang
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+# automatic
++F = $(notdir $+)
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# environment
+HOSTNAME = k8s-node-01
+# environment
+MAKELEVEL := 0
+# default
+MAKE = $(MAKE_COMMAND)
+# default
+MAKECMDGOALS := all
+# environment
+SHLVL = 5
+# environment
+JAVA_HOME = /usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64/
+# environment
+XDG_SESSION_ID = 31806
+# environment
+USER = jinfang
+# makefile
+.DEFAULT_GOAL := 
+# environment
+GOROOT = /home/jinfang/goroot
+# environment
+CLASS_PATH = .:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//lib/dt.jar:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//lib/tools.jar:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//jre/lib
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# default
+MAKE_COMMAND := make
+# default
+.VARIABLES := 
+# automatic
+*F = $(notdir $*)
+# makefile
+MAKEFLAGS = pqrR
+# environment
+MFLAGS = -pqrR
+# environment
+SSH_CLIENT = 61.173.28.189 32438 22
+# environment
+MAIL = /var/spool/mail/jinfang
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# environment
+BROWSER = /home/jinfang/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662/bin/helpers/browser.sh
+# environment
+VSCODE_HANDLES_SIGPIPE = true
+# environment
+TC_LIB_DIR = /usr/lib64/tc
+# default
+MAKEFILES := 
+# environment
+PROMPT_COMMAND = history -a; history -a; history -a; 
+# automatic
+<F = $(notdir $<)
+# environment
+PHANTOMJS_PLATFORM = linux
+# environment
+PHANTOMJS_ARCH = x64
+# environment
+LC_ALL = C
+# automatic
+^F = $(notdir $^)
+# default
+SUFFIXES := 
+# environment
+HISTSIZE = 3000
+# default
+.INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
+# default
+.RECIPEPREFIX := 
+# default
+MAKE_HOST := x86_64-redhat-linux-gnu
+# environment
+LANG = C
+# variable set hash-table stats:
+# Load=75/1024=7%, Rehash=0, Collisions=9/97=9%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# . (device 64769, inode 655484): 11 files, no impossibilities.
+
+# 11 files, no impossibilities in 1 directories.
+
+# Implicit Rules
+
+# No implicit rules.
+
+# Files
+
+# Not a target:
+all:
+#  Command line target.
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has not been updated.
+
+# Not a target:
+Makefile:
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Failed to be updated.
+
+# Not a target:
+makefile:
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Failed to be updated.
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+GNUmakefile:
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Failed to be updated.
+
+# files hash-table stats:
+# Load=6/1024=1%, Rehash=0, Collisions=0/15=0%
+# VPATH Search Paths
+
+# No 'vpath' search paths.
+
+# No general ('VPATH' variable) search path.
+
+# strcache buffers: 1 (0) / strings = 19 / storage = 201 B / avg = 10 B
+# current buf: size = 8162 B / used = 201 B / count = 19 / avg = 10 B
+
+# strcache performance: lookups = 22 / hit rate = 13%
+# hash-table stats:
+# Load=19/8192=0%, Rehash=0, Collisions=1/22=5%
+# Finished Make data base on Sun Aug 28 19:19:54 2022
+
+ 
