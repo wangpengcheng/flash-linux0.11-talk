@@ -339,27 +339,38 @@ struct m_inode * get_empty_inode(void)
 struct m_inode * get_pipe_inode(void)
 {
 	struct m_inode * inode;
-
+    // 查询空闲inode
 	if (!(inode = get_empty_inode()))
 		return NULL;
+    // 查询空闲分页
 	if (!(inode->i_size=get_free_page())) {
 		inode->i_count = 0;
 		return NULL;
 	}
+    // 创建引用计数
 	inode->i_count = 2;	/* sum of readers/writers */
+    // 初始化指针
 	PIPE_HEAD(*inode) = PIPE_TAIL(*inode) = 0;
-	inode->i_pipe = 1;
+	// pip 初始化为1
+    inode->i_pipe = 1;
 	return inode;
 }
-
+/**
+ * @brief  从设备上读取指定节点号的i节点
+ * @param  dev              目标设备名称
+ * @param  nr               i节点号
+ * @return struct m_inode*  最终的inode 指针
+ */
 struct m_inode * iget(int dev,int nr)
 {
 	struct m_inode * inode, * empty;
 
 	if (!dev)
 		panic("iget with dev==0");
+    // 获取一个空闲i 节点
 	empty = get_empty_inode();
 	inode = inode_table;
+    // 遍历i 节点列表，找寻目标设备上的节点
 	while (inode < NR_INODE+inode_table) {
 		if (inode->i_dev != dev || inode->i_num != nr) {
 			inode++;
@@ -371,37 +382,52 @@ struct m_inode * iget(int dev,int nr)
 			continue;
 		}
 		inode->i_count++;
+        // 存在挂载点，该i节点是其它文件系统的安装点
+        // 在超级块中搜寻安装在此i节点超级块，释放空闲节点，返回i节点指针
 		if (inode->i_mount) {
 			int i;
-
+            // 找寻对应超级块挂载点
 			for (i = 0 ; i<NR_SUPER ; i++)
 				if (super_block[i].s_imount==inode)
 					break;
+            // 如果大于了索引，新增inode缓冲区数量
 			if (i >= NR_SUPER) {
 				printk("Mounted inode hasn't got sb\n");
 				if (empty)
 					iput(empty);
 				return inode;
 			}
+            // 将该节点写盘，从安装在此i节点文件系统的超级块上
+            // 读取设备号，并令i节点号为1，重新扫描，查询对应根节点
 			iput(inode);
+            // 查询设备号
 			dev = super_block[i].s_dev;
+            // 设备节点编号
 			nr = ROOT_INO;
+            // 重新设置inode节点
 			inode = inode_table;
 			continue;
 		}
+        // 空闲链表存在，直接放入
 		if (empty)
 			iput(empty);
 		return inode;
 	}
+    // 没有找到指定的i节点，则进行创建
 	if (!empty)
 		return (NULL);
 	inode=empty;
 	inode->i_dev = dev;
 	inode->i_num = nr;
+    // 进行读写测试
 	read_inode(inode);
+    // 返回文件i节点
 	return inode;
 }
-
+/**
+ * @brief   从设备上读取指定i节点的信息到内存(缓冲区)中
+ * @param  inode            目标inode节点
+ */
 static void read_inode(struct m_inode * inode)
 {
 	struct super_block * sb;
@@ -409,19 +435,29 @@ static void read_inode(struct m_inode * inode)
 	int block;
 
 	lock_inode(inode);
+    // 查询对应的文件系统
 	if (!(sb=get_super(inode->i_dev)))
 		panic("trying to read inode without dev");
+    // 计算对应的逻辑块编号= (启动块 + 超级块) + i 节点位图占用块数 + 逻辑块位图占用块数 + (i 节点号 - 1) / 每块含有的i节点数目
 	block = 2 + sb->s_imap_blocks + sb->s_zmap_blocks +
 		(inode->i_num-1)/INODES_PER_BLOCK;
+    // 尝试进行数据读取
 	if (!(bh=bread(inode->i_dev,block)))
 		panic("unable to read i-node block");
-	*(struct d_inode *)inode =
+	// 将node指针指向对应i节点信息
+    *(struct d_inode *)inode =
 		((struct d_inode *)bh->b_data)
 			[(inode->i_num-1)%INODES_PER_BLOCK];
+    // 释放bh指针
 	brelse(bh);
+    // 解锁inode 信息
 	unlock_inode(inode);
 }
-
+/**
+ * @brief  指定i节点信息写入设备
+ * 写入缓冲区对应的缓冲块中，待缓冲区刷新时会写入盘中
+ * @param  inode            对应的数据节点
+ */
 static void write_inode(struct m_inode * inode)
 {
 	struct super_block * sb;
@@ -429,20 +465,26 @@ static void write_inode(struct m_inode * inode)
 	int block;
 
 	lock_inode(inode);
+    // 节点没有被修改过，直接解锁并释放
 	if (!inode->i_dirt || !inode->i_dev) {
 		unlock_inode(inode);
 		return;
 	}
+    // 查询设备对应文件系统
 	if (!(sb=get_super(inode->i_dev)))
 		panic("trying to write inode without device");
+    // 计算对应的逻辑块编号
 	block = 2 + sb->s_imap_blocks + sb->s_zmap_blocks +
 		(inode->i_num-1)/INODES_PER_BLOCK;
+    // 读取节点对应的逻辑块
 	if (!(bh=bread(inode->i_dev,block)))
 		panic("unable to read i-node block");
+    // 将节点信息复制到对应的i节点项中
 	((struct d_inode *)bh->b_data)
 		[(inode->i_num-1)%INODES_PER_BLOCK] =
 			*(struct d_inode *)inode;
-	bh->b_dirt=1;
+	// 重置缓冲区标志位，解锁该缓冲区
+    bh->b_dirt=1;
 	inode->i_dirt=0;
 	brelse(bh);
 	unlock_inode(inode);

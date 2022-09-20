@@ -166,11 +166,13 @@ struct d_super_block
     unsigned long s_max_size;
     unsigned short s_magic;
 };
-
+/**
+ * @brief 文件夹实体类
+ */
 struct dir_entry
 {
-    unsigned short inode;
-    char name[NAME_LEN];
+    unsigned short inode; //< inode 编号
+    char name[NAME_LEN];  //< 对应的文件夹名称
 };
 
 extern struct m_inode inode_table[NR_INODE];
