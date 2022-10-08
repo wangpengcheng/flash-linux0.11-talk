@@ -13,7 +13,14 @@
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
-
+/**
+ * @brief  文件内容读取函数
+ * @param  inode            对应的inode 节点
+ * @param  filp             文件指针
+ * @param  buf              缓冲区指针
+ * @param  count            对应的数据长度
+ * @return int              最终执行结果
+ */
 int file_read(struct m_inode * inode, struct file * filp, char * buf, int count)
 {
 	int left,chars,nr;
@@ -44,7 +51,14 @@ int file_read(struct m_inode * inode, struct file * filp, char * buf, int count)
 	inode->i_atime = CURRENT_TIME;
 	return (count-left)?(count-left):-ERROR;
 }
-
+/**
+ * @brief  文件写入函数
+ * @param  inode            对应的inode 节点
+ * @param  filp             文件指针，以知道文件中当前读写指针位置
+ * @param  buf              缓冲区指针
+ * @param  count            对应的数据长度
+ * @return int              最终执行结果
+ */
 int file_write(struct m_inode * inode, struct file * filp, char * buf, int count)
 {
 	off_t pos;

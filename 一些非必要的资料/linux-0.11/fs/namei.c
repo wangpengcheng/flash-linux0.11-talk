@@ -547,35 +547,45 @@ int sys_mknod(const char * filename, int mode, int dev)
 	struct m_inode * dir, * inode;
 	struct buffer_head * bh;
 	struct dir_entry * de;
-	
+	// 非超级用户，直接报错
 	if (!suser())
 		return -EPERM;
+    // 检查文件路径是否存在
 	if (!(dir = dir_namei(filename,&namelen,&basename)))
 		return -ENOENT;
-	if (!namelen) {
+	// 长度为0，表示顶端目录不存在，直接返回
+    if (!namelen) {
 		iput(dir);
 		return -ENOENT;
 	}
+    // 检查用户是否有写入权限
 	if (!permission(dir,MAY_WRITE)) {
 		iput(dir);
 		return -EPERM;
 	}
+    // 查找文件目录项
 	bh = find_entry(&dir,basename,namelen,&de);
-	if (bh) {
+	// 检查文件是否存在
+    if (bh) {
 		brelse(bh);
 		iput(dir);
 		return -EEXIST;
 	}
+    // 创建文件inode 节点
 	inode = new_inode(dir->i_dev);
 	if (!inode) {
 		iput(dir);
 		return -ENOSPC;
 	}
+    // 设置读写模式
 	inode->i_mode = mode;
+    // 检查对应设备类型
 	if (S_ISBLK(mode) || S_ISCHR(mode))
 		inode->i_zone[0] = dev;
+    // 更新文件时间信息
 	inode->i_mtime = inode->i_atime = CURRENT_TIME;
 	inode->i_dirt = 1;
+    // 添加目录项
 	bh = add_entry(dir,basename,namelen,&de);
 	if (!bh) {
 		iput(dir);
@@ -583,14 +593,21 @@ int sys_mknod(const char * filename, int mode, int dev)
 		iput(inode);
 		return -ENOSPC;
 	}
+    // 更新引用计数
 	de->inode = inode->i_num;
+    // 设置同步信息
 	bh->b_dirt = 1;
 	iput(dir);
 	iput(inode);
 	brelse(bh);
 	return 0;
 }
-
+/**
+ * @brief  系统调用创建文件夹
+ * @param  pathname         文件夹路径
+ * @param  mode             读写模式
+ * @return int              最终返回结果
+ */
 int sys_mkdir(const char * pathname, int mode)
 {
 	const char * basename;
@@ -625,6 +642,7 @@ int sys_mkdir(const char * pathname, int mode)
 	inode->i_size = 32;
 	inode->i_dirt = 1;
 	inode->i_mtime = inode->i_atime = CURRENT_TIME;
+    // 创建新的逻辑块
 	if (!(inode->i_zone[0]=new_block(inode->i_dev))) {
 		iput(dir);
 		inode->i_nlinks--;
@@ -632,6 +650,7 @@ int sys_mkdir(const char * pathname, int mode)
 		return -ENOSPC;
 	}
 	inode->i_dirt = 1;
+    // 读取新的逻辑块
 	if (!(dir_block=bread(inode->i_dev,inode->i_zone[0]))) {
 		iput(dir);
 		free_block(inode->i_dev,inode->i_zone[0]);
@@ -639,8 +658,11 @@ int sys_mkdir(const char * pathname, int mode)
 		iput(inode);
 		return -ERROR;
 	}
+    // 获取对应的目录项指针
 	de = (struct dir_entry *) dir_block->b_data;
 	de->inode=inode->i_num;
+    // 创建. 和.. 目录项
+    // 重置名字字段为'.'
 	strcpy(de->name,".");
 	de++;
 	de->inode = dir->i_num;
@@ -648,8 +670,10 @@ int sys_mkdir(const char * pathname, int mode)
 	inode->i_nlinks = 2;
 	dir_block->b_dirt = 1;
 	brelse(dir_block);
+    // 设置读写模式
 	inode->i_mode = I_DIRECTORY | (mode & 0777 & ~current->umask);
 	inode->i_dirt = 1;
+    // 添加目录项
 	bh = add_entry(dir,basename,namelen,&de);
 	if (!bh) {
 		iput(dir);
@@ -659,6 +683,7 @@ int sys_mkdir(const char * pathname, int mode)
 		return -ENOSPC;
 	}
 	de->inode = inode->i_num;
+    // 修改位，进行写入
 	bh->b_dirt = 1;
 	dir->i_nlinks++;
 	dir->i_dirt = 1;
@@ -671,20 +696,29 @@ int sys_mkdir(const char * pathname, int mode)
 /*
  * routine to check that the specified directory is empty (for rmdir)
  */
+
+/**
+ * @brief  检查指定目录是否为空的子程序
+ * @param  inode            指定的目录指针
+ * @return int 
+ */
 static int empty_dir(struct m_inode * inode)
 {
 	int nr,block;
 	int len;
 	struct buffer_head * bh;
 	struct dir_entry * de;
-
+    // 获取其中的目录项数目--文件大小/目录项大小
 	len = inode->i_size / sizeof (struct dir_entry);
+    // 校验inode 块是否可用 数据长度(.和..) & 逻辑块号 & 设备读取
 	if (len<2 || !inode->i_zone[0] ||
 	    !(bh=bread(inode->i_dev,inode->i_zone[0]))) {
 	    	printk("warning - bad directory on dev %04x\n",inode->i_dev);
 		return 0;
 	}
+    // 转换为对应的数据指针
 	de = (struct dir_entry *) bh->b_data;
+    // inode相关关键节点--必定包含.和.. 文件夹
 	if (de[0].inode != inode->i_num || !de[1].inode || 
 	    strcmp(".",de[0].name) || strcmp("..",de[1].name)) {
 	    	printk("warning - bad directory on dev %04x\n",inode->i_dev);
@@ -692,29 +726,45 @@ static int empty_dir(struct m_inode * inode)
 	}
 	nr = 2;
 	de += 2;
+    // 遍历所有目录项
 	while (nr<len) {
+        // 检查是否存在越界 -- 文件夹下下一个inode
 		if ((void *) de >= (void *) (bh->b_data+BLOCK_SIZE)) {
+            // 已经越界
+            // 释放缓冲块
 			brelse(bh);
+            // 获取逻辑块号
 			block=bmap(inode,nr/DIR_ENTRIES_PER_BLOCK);
-			if (!block) {
+			// 逻辑块号为0--直接读取下一个目录项
+            if (!block) {
 				nr += DIR_ENTRIES_PER_BLOCK;
 				continue;
 			}
 			if (!(bh=bread(inode->i_dev,block)))
 				return 0;
+            // 更新de
 			de = (struct dir_entry *) bh->b_data;
 		}
+        // 存在inode--表示存在文件，直接返回0
 		if (de->inode) {
 			brelse(bh);
 			return 0;
 		}
+        // 目录项++
 		de++;
+        // 使用统计++
 		nr++;
 	}
+    // 释放对应缓冲区
 	brelse(bh);
+    // 返回1--表示文件夹为空
 	return 1;
 }
-
+/**
+ * @brief  删除文件夹，rmdir指令对应函数
+ * @param  name             文件夹路径
+ * @return int              最终执行结果
+ */
 int sys_rmdir(const char * name)
 {
 	const char * basename;
@@ -735,16 +785,19 @@ int sys_rmdir(const char * name)
 		iput(dir);
 		return -EPERM;
 	}
+    // 查找对应目录项目
 	bh = find_entry(&dir,basename,namelen,&de);
 	if (!bh) {
 		iput(dir);
 		return -ENOENT;
 	}
+    // 查询对应的inode 
 	if (!(inode = iget(dir->i_dev, de->inode))) {
 		iput(dir);
 		brelse(bh);
 		return -EPERM;
 	}
+    // 检查权限
 	if ((dir->i_mode & S_ISVTX) && current->euid &&
 	    inode->i_uid != current->euid) {
 		iput(dir);
@@ -770,6 +823,7 @@ int sys_rmdir(const char * name)
 		brelse(bh);
 		return -ENOTDIR;
 	}
+    // 检查文件夹是否为空
 	if (!empty_dir(inode)) {
 		iput(inode);
 		iput(dir);
@@ -786,11 +840,18 @@ int sys_rmdir(const char * name)
 	dir->i_nlinks--;
 	dir->i_ctime = dir->i_mtime = CURRENT_TIME;
 	dir->i_dirt=1;
+    // 释放目录
 	iput(dir);
+    // 释放要删除的inode节点
 	iput(inode);
 	return 0;
 }
-
+/**
+ * @brief  删除对应的硬链接
+ * 软链接inode内容是另外一个路径
+ * @param  name             对应的名称
+ * @return int              执行结果
+ */
 int sys_unlink(const char * name)
 {
 	const char * basename;
@@ -841,14 +902,22 @@ int sys_unlink(const char * name)
 	de->inode = 0;
 	bh->b_dirt = 1;
 	brelse(bh);
+    // 减少对应的引用计数
 	inode->i_nlinks--;
 	inode->i_dirt = 1;
 	inode->i_ctime = CURRENT_TIME;
+    // 删除对应的节点和dir
 	iput(inode);
 	iput(dir);
 	return 0;
 }
-
+/**
+ * @brief  文件建立一个文件名。
+ * 一个已经存在的文件创建一个新连接(也称为硬连接 - hard link)。
+ * @param  oldname          原来的路径名
+ * @param  newname          新的路径名
+ * @return int              最终返回结果
+ */
 int sys_link(const char * oldname, const char * newname)
 {
 	struct dir_entry * de;

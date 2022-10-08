@@ -5,5 +5,7 @@
  */
 
 #include <linux/fs.h>
-
+/**
+ * @brief 文件表数组
+ */
 struct file file_table[NR_FILE];

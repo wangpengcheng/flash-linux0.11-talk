@@ -12,18 +12,40 @@
 
 #include <asm/segment.h>
 #include <asm/io.h>
-
+/**
+ * @brief  tty读取函数，使用汇编实现
+ * @param  minor            对应设备
+ * @param  buf              缓冲指针
+ * @param  count            数据长度
+ * @return int
+ */
 extern int tty_read(unsigned minor,char * buf,int count);
 extern int tty_write(unsigned minor,char * buf,int count);
 
 typedef (*crw_ptr)(int rw,unsigned minor,char * buf,int count,off_t * pos);
-
+/**
+ * @brief  终端读写操作
+ * @param  rw               读写操作描述符
+ * @param  minor            对应设备
+ * @param  buf              缓冲指针
+ * @param  count            数据长度
+ * @param  pos              起始位置
+ * @return int              最终结果
+ */
 static int rw_ttyx(int rw,unsigned minor,char * buf,int count,off_t * pos)
 {
 	return ((rw==READ)?tty_read(minor,buf,count):
 		tty_write(minor,buf,count));
 }
-
+/**
+ * @brief 终端读写操作函数
+ * @param  rw               My Param doc
+ * @param  minor            My Param doc
+ * @param  buf              My Param doc
+ * @param  count            My Param doc
+ * @param  pos              My Param doc
+ * @return int 
+ */
 static int rw_tty(int rw,unsigned minor,char * buf,int count, off_t * pos)
 {
 	if (current->tty<0)
@@ -61,7 +83,7 @@ static int rw_port(int rw,char * buf, int count, off_t * pos)
 	*pos += i;
 	return i;
 }
-
+// 内存读写操作函数
 static int rw_memory(int rw, unsigned minor, char * buf, int count, off_t * pos)
 {
 	switch(minor) {
@@ -100,5 +122,6 @@ int rw_char(int rw,int dev, char * buf, int count, off_t * pos)
 		return -ENODEV;
 	if (!(call_addr=crw_table[MAJOR(dev)]))
 		return -ENODEV;
+    // 调用对应函数
 	return call_addr(rw,MINOR(dev),buf,count,pos);
 }

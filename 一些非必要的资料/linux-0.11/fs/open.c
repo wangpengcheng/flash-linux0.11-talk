@@ -15,12 +15,22 @@
 #include <linux/tty.h>
 #include <linux/kernel.h>
 #include <asm/segment.h>
-
+/**
+ * @brief  获取文件系统信息--系统调用
+ * @param  dev              设备
+ * @param  ubuf             ubuf 
+ * @return int 
+ */
 int sys_ustat(int dev, struct ustat * ubuf)
 {
 	return -ENOSYS;
 }
-
+/**
+ * @brief  查询当前的utc时间
+ * @param  filename         文件名称
+ * @param  times            时间指针，用于存储当前的时间
+ * @return int              最终的返回结果
+ */
 int sys_utime(char * filename, struct utimbuf * times)
 {
 	struct m_inode * inode;

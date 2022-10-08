@@ -104,7 +104,7 @@ struct m_inode
     unsigned long i_mtime;      //< 最后的修改时间
     unsigned char i_gid;        //< 宿主用户的组id
     unsigned char i_nlinks;     //< 文件目录项目链接数
-    unsigned short i_zone[9];   //< 数据占用的block 号，，最多为9个块
+    unsigned short i_zone[9];   //< 数据占用的block 号，最多为9个块=7个直接块 + 1 * 一次间接块 + 1 * 二次间接块
                                 /* these are in memory also */
     struct task_struct *i_wait; //< 正在等待的i节点进程
     unsigned long i_atime;      //< 最后访问时间
@@ -119,14 +119,16 @@ struct m_inode
     unsigned char i_seek;       //< 搜寻标志
     unsigned char i_update;     //< 更新标志位
 };
-
+/**
+ * @brief  文件结构指针，用于进行文件读取
+ */
 struct file
 {
-    unsigned short f_mode;
-    unsigned short f_flags;
-    unsigned short f_count;
-    struct m_inode *f_inode;
-    off_t f_pos;
+    unsigned short f_mode;   // 文件mode 
+    unsigned short f_flags;  //wr 读取标志位
+    unsigned short f_count;  // 总长度
+    struct m_inode *f_inode; // 文件对应的inode 
+    off_t f_pos;            // 文件操作的pos
 };
 /**
  * @brief 超级块结构体
@@ -167,7 +169,8 @@ struct d_super_block
     unsigned short s_magic;
 };
 /**
- * @brief 文件夹实体类
+ * @brief 文件目录项实体类
+ * 文件夹inode对应的实体文件名称
  */
 struct dir_entry
 {
