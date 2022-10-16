@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Fri Oct  7 10:38:33 2022
+# Make data base, printed on Sun Oct 16 22:25:20 2022
 
 # Variables
 
@@ -35,7 +35,7 @@ SHELL = /bin/sh
 # environment
 JRE_HOME = /usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//jre
 # environment
-VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"52a557de5c39607b04949a9e2e3aeee5.zh-cn","_translationsConfigFile":"/home/jinfang/.vscode-server/data/clp/52a557de5c39607b04949a9e2e3aeee5.zh-cn/tcf.json","_cacheRoot":"/home/jinfang/.vscode-server/data/clp/52a557de5c39607b04949a9e2e3aeee5.zh-cn","_resolvedLanguagePackCoreLocation":"/home/jinfang/.vscode-server/data/clp/52a557de5c39607b04949a9e2e3aeee5.zh-cn/74b1f979648cc44d385a2286793c226e611f59e7","_corruptedFile":"/home/jinfang/.vscode-server/data/clp/52a557de5c39607b04949a9e2e3aeee5.zh-cn/corrupted.info","_languagePackSupport":true}
+VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"d12f895d31d9f9b0d093ad4fb7402f51.zh-cn","_translationsConfigFile":"/home/jinfang/.vscode-server/data/clp/d12f895d31d9f9b0d093ad4fb7402f51.zh-cn/tcf.json","_cacheRoot":"/home/jinfang/.vscode-server/data/clp/d12f895d31d9f9b0d093ad4fb7402f51.zh-cn","_resolvedLanguagePackCoreLocation":"/home/jinfang/.vscode-server/data/clp/d12f895d31d9f9b0d093ad4fb7402f51.zh-cn/129500ee4c8ab7263461ffe327268ba56b9f210d","_corruptedFile":"/home/jinfang/.vscode-server/data/clp/d12f895d31d9f9b0d093ad4fb7402f51.zh-cn/corrupted.info","_languagePackSupport":true}
 # environment
 _ = /usr/bin/make
 # environment
@@ -53,9 +53,9 @@ LESSOPEN = ||/usr/bin/lesspipe.sh %s
 # environment
 VSCODE_CWD = /home/jinfang
 # environment
-SSH_CONNECTION = 61.173.28.189 12835 10.0.4.11 22
+SSH_CONNECTION = 223.167.113.180 56073 10.0.4.11 22
 # environment
-PATH = /home/jinfang/.vscode-server/bin/74b1f979648cc44d385a2286793c226e611f59e7/bin/remote-cli:/home/jinfang/.local/bin:/home/jinfang/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/jinfang/goroot/bin:/home/jinfang/go/bin:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//bin:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//jre/bin:/usr/local/maven3/bin:/home/jinfang/goroot/bin:/home/jinfang/go/bin:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//bin:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//jre/bin:/usr/local/maven3/bin
+PATH = /home/jinfang/.vscode-server/bin/129500ee4c8ab7263461ffe327268ba56b9f210d/bin/remote-cli:/home/jinfang/.local/bin:/home/jinfang/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/jinfang/goroot/bin:/home/jinfang/go/bin:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//bin:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//jre/bin:/usr/local/maven3/bin:/home/jinfang/goroot/bin:/home/jinfang/go/bin:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//bin:/usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64//jre/bin:/usr/local/maven3/bin
 # environment
 XDG_RUNTIME_DIR = /run/user/1001
 # environment
@@ -63,7 +63,7 @@ GOPATH = /home/jinfang/go
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1001/vscode-ipc-d1e57c67-49f7-4894-baf1-6422b4ed4267.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1001/vscode-ipc-d4bd62cd-b83e-4a8e-8bd4-5e4494d1f990.sock
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
 # automatic
@@ -103,7 +103,7 @@ SHLVL = 5
 # environment
 JAVA_HOME = /usr/lib/jvm/java-17-openjdk-17.0.1.0.12-2.el8_5.x86_64/
 # environment
-XDG_SESSION_ID = 56609
+XDG_SESSION_ID = 61950
 # environment
 USER = jinfang
 # makefile
@@ -125,13 +125,13 @@ MAKEFLAGS = pqrR
 # environment
 MFLAGS = -pqrR
 # environment
-SSH_CLIENT = 61.173.28.189 12835 22
+SSH_CLIENT = 223.167.113.180 56073 22
 # environment
 MAIL = /var/spool/mail/jinfang
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # environment
-BROWSER = /home/jinfang/.vscode-server/bin/74b1f979648cc44d385a2286793c226e611f59e7/bin/helpers/browser.sh
+BROWSER = /home/jinfang/.vscode-server/bin/129500ee4c8ab7263461ffe327268ba56b9f210d/bin/helpers/browser.sh
 # environment
 VSCODE_HANDLES_SIGPIPE = true
 # environment
@@ -139,7 +139,7 @@ TC_LIB_DIR = /usr/lib64/tc
 # default
 MAKEFILES := 
 # environment
-PROMPT_COMMAND = history -a; history -a; history -a; 
+PROMPT_COMMAND = history -a; history -a; history -a; history -a; 
 # automatic
 <F = $(notdir $<)
 # environment
@@ -229,6 +229,6 @@ GNUmakefile:
 # strcache performance: lookups = 22 / hit rate = 13%
 # hash-table stats:
 # Load=19/8192=0%, Rehash=0, Collisions=1/22=5%
-# Finished Make data base on Fri Oct  7 10:38:33 2022
+# Finished Make data base on Sun Oct 16 22:25:20 2022
 
  

@@ -125,9 +125,9 @@ struct task_struct
     struct m_inode *root; // root 根目录
     struct m_inode *executable; // 是否可执行
     unsigned long close_on_exec;
-    struct file *filp[NR_OPEN];  //< 文件句柄数组
+    struct file *filp[NR_OPEN];  //< 文件句柄数组，用于记录进程所持有的文件数
                                 /* ldt for this task 0 - zero 1 - cs 2 - ds&ss */
-    struct desc_struct ldt[3];  //< 描述结构体
+    struct desc_struct ldt[3];  //< 描述结构体--描述符基础地址
     /* tss for this task */
     struct tss_struct tss;  //< 任务TSS寄存器
 };
